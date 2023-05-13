@@ -1,0 +1,1 @@
+module.exports = [{"id":1,"username":"admin","email":"admin","password":"123"},{"id":2,"username":"Tester","email":"a","password":"a"}]

@@ -11,15 +11,17 @@ app.listen(port, () => {
 app.use(express.json());
 
 // Carregamento de dados mockados
-let playlists = require('./playlists');
-let musics = require('./music');
-let accounts = require('./accounts');
+let playlists = require('../src/playlists');
+let musics = require('../src/music');
+let accounts = require('../src/accounts');
+let userPlaylists = require('./userPlaylist');
 
 // Função para salvar os dados nos arquivos
 const saveData = () => {
   fs.writeFileSync('./playlists.js', 'module.exports = ' + JSON.stringify(playlists));
   fs.writeFileSync('./music.js', 'module.exports = ' + JSON.stringify(musics));
   fs.writeFileSync('./accounts.js', 'module.exports = ' + JSON.stringify(accounts));
+  fs.writeFileSync('./userPlaylist.js', 'module.exports = ' + JSON.stringify(userPlaylists));
 };
 
 // Função para gerar ID aleatório
@@ -82,13 +84,13 @@ app.put('/usuarios/:id', (req, res) => {
 
 // Criar uma nova playlist
 app.post('/playlists', (req, res) => {
-    const { nome, musicas } = req.body;
-    const id = generateId();
-    const novaPlaylist = { id, nome, musicas };
-    playlists.push(novaPlaylist);
-    saveData();
-    res.status(201).json(novaPlaylist);
-  });
+  const { nome, musicas } = req.body;
+  const id = generateId();
+  const novaPlaylist = { id, nome, musicas };
+  playlists.push(novaPlaylist);
+  saveData();
+  res.status(201).json(novaPlaylist);
+});
 
 // Obter músicas pelo nome
 app.get('/musicas', (req, res) => {
@@ -120,7 +122,7 @@ app.post('/usuarios/:userId/playlists/:playlistId/musicas', (req, res) => {
     return;
   }
 
-  const playlist = playlists.find((p) => p.id === playlistId);
+  const playlist = userPlaylists.find((p) => p.id === playlistId && p.userId === userId);
   if (!playlist) {
     res.status(404).json({ message: 'Playlist não encontrada.' });
     return;
@@ -143,7 +145,7 @@ app.delete('/usuarios/:userId/playlists/:playlistId/musicas/:musicaId', (req, re
   const playlistId = parseInt(req.params.playlistId);
   const musicaId = parseInt(req.params.musicaId);
 
-  const playlist = playlists.find((p) => p.id === playlistId);
+  const playlist = userPlaylists.find((p) => p.id === playlistId && p.userId === userId);
   if (!playlist) {
     res.status(404).json({ message: 'Playlist não encontrada.' });
     return;
@@ -159,3 +161,11 @@ app.delete('/usuarios/:userId/playlists/:playlistId/musicas/:musicaId', (req, re
   saveData();
   res.status(200).json(playlist);
 });
+
+// Exemplo de uso:
+// POST /usuarios/1/playlists/1/musicas
+// Corpo da requisição: { "musicaId": 1 }
+// Adiciona a música com ID 1 à playlist com ID 1 do usuário com ID 1
+
+// DELETE /usuarios/1/playlists/1/musicas/1
+// Remove a música com ID 1 da playlist com ID 1 do usuário com ID 1
