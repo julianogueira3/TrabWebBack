@@ -11,15 +11,15 @@ app.listen(port, () => {
 app.use(express.json());
 
 // Carregamento de dados mockados
-let playlists = require('./playlists');
-let musics = require('./music');
-let accounts = require('./accounts');
+let playlists = require('../Mock/playlists');
+let musics = require('../Mock/music');
+const accounts = require('../Mock/accounts');
 
 // Função para salvar os dados nos arquivos
 const saveData = () => {
-  fs.writeFileSync('./playlists.js', 'module.exports = ' + JSON.stringify(playlists));
-  fs.writeFileSync('./music.js', 'module.exports = ' + JSON.stringify(musics));
-  fs.writeFileSync('./accounts.js', 'module.exports = ' + JSON.stringify(accounts));
+  fs.writeFileSync('./mocks/playlists.js', 'module.exports = ' + JSON.stringify(playlists, null, 2));
+  fs.writeFileSync('./mocks/music.js', 'module.exports = ' + JSON.stringify(musics, null, 2));
+  fs.writeFileSync('./mocks/accounts.js', 'module.exports = ' + JSON.stringify(accounts, null, 2));
 };
 
 // Função para gerar ID aleatório
@@ -27,6 +27,13 @@ const generateId = () => {
   const randomNumber = Math.floor(Math.random() * 100);
   return randomNumber.toString();
 };
+
+// Verificar se um usuário existe
+function isUserExists(userId) {
+  return accounts.some((user) => user.userId.toString() === userId);
+}
+
+
 
 // Obter todas as playlists
 app.get('/playlists', (req, res) => {
@@ -47,12 +54,13 @@ app.get('/playlists/:id', (req, res) => {
 // Novo usuário
 app.post('/usuarios', (req, res) => {
   const { username, email, password } = req.body;
-  const id = generateId();
-  const novoUsuario = { id, username, email, password };
+  const userId = generateId();
+  const novoUsuario = { userId: userId, username, email, password }; // Adicione o ID gerado ao campo userId
   accounts.push(novoUsuario);
   saveData();
   res.status(201).json(novoUsuario);
 });
+
 
 // Obter um usuário pelo endereço de e-mail
 app.get('/usuarios', (req, res) => {
@@ -66,29 +74,45 @@ app.get('/usuarios', (req, res) => {
 });
 
 // Atualizar um usuário existente
-app.put('/usuarios/:id', (req, res) => {
-  const userId = parseInt(req.params.id);
-  const { nome, email } = req.body;
-  const usuarioIndex = accounts.findIndex((u) => u.id === userId);
+app.put('/usuarios/:userId', (req, res) => {
+  const userId = req.params.userId;
+  const { username, email } = req.body;
+  const usuarioIndex = accounts.findIndex((u) => u.userId === userId);
   if (usuarioIndex === -1) {
     res.status(404).json({ message: 'Usuário não encontrado.' });
   } else {
-    const novoId = generateId();
-    accounts[usuarioIndex] = { id: novoId, nome, email };
+    accounts[usuarioIndex].username = username;
+    accounts[usuarioIndex].email = email;
     saveData();
     res.json(accounts[usuarioIndex]);
   }
 });
 
-// Criar uma nova playlist
+// Adicionar uma nova música
+app.post('/musicas', (req, res) => {
+  const { id, nome, artista, imgpath } = req.body;
+  const novaMusica = { id, nome, artista, imgpath };
+  musics.push(novaMusica);
+  saveData();
+  res.status(201).json(novaMusica);
+});
+
+
+/// Criar uma nova playlist
 app.post('/playlists', (req, res) => {
-    const { nome, musicas } = req.body;
-    const id = generateId();
-    const novaPlaylist = { id, nome, musicas };
-    playlists.push(novaPlaylist);
-    saveData();
-    res.status(201).json(novaPlaylist);
-  });
+  const { userId, nome, musicas } = req.body;
+
+  if (!isUserExists(userId)) {
+    res.status(404).json({ message: 'Usuário não encontrado.' });
+    return;
+  }
+
+  const id = generateId();
+  const novaPlaylist = { id, userId, nome, musicas }; 
+  playlists.push(novaPlaylist);
+  saveData();
+  res.status(201).json(novaPlaylist);
+});
 
 // Obter músicas pelo nome
 app.get('/musicas', (req, res) => {
@@ -114,7 +138,7 @@ app.post('/usuarios/:userId/playlists/:playlistId/musicas', (req, res) => {
   const playlistId = parseInt(req.params.playlistId);
   const musicaId = parseInt(req.body.musicaId);
 
-  const usuario = accounts.find((u) => u.id === userId);
+  const usuario = accounts.find((u) => u.userId === userId);
   if (!usuario) {
     res.status(404).json({ message: 'Usuário não encontrado.' });
     return;
