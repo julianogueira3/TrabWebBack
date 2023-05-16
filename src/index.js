@@ -11,15 +11,15 @@ app.listen(port, () => {
 app.use(express.json());
 
 // Carregamento de dados mockados
-let playlists = require('../Mock/playlists');
-let musics = require('../Mock/music');
-const accounts = require('../Mock/accounts');
+let playlists = require('./playlists');
+let musics = require('./music');
+const accounts = require('./accounts');
 
 // Função para salvar os dados nos arquivos
 const saveData = () => {
-  fs.writeFileSync('./mocks/playlists.js', 'module.exports = ' + JSON.stringify(playlists, null, 2));
-  fs.writeFileSync('./mocks/music.js', 'module.exports = ' + JSON.stringify(musics, null, 2));
-  fs.writeFileSync('./mocks/accounts.js', 'module.exports = ' + JSON.stringify(accounts, null, 2));
+  fs.writeFileSync('./playlists.js', 'module.exports = ' + JSON.stringify(playlists));
+  fs.writeFileSync('./music.js', 'module.exports = ' + JSON.stringify(musics));
+  fs.writeFileSync('./accounts.js', 'module.exports = ' + JSON.stringify(accounts));
 };
 
 // Função para gerar ID aleatório
@@ -52,7 +52,7 @@ app.get('/playlists/:id', (req, res) => {
 });
 
 // Novo usuário
-app.post('/usuarios', (req, res) => {
+app.post('/usuarios', (req, res) => { 
   const { username, email, password } = req.body;
   const userId = generateId();
   const novoUsuario = { userId: userId, username, email, password }; // Adicione o ID gerado ao campo userId

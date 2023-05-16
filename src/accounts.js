@@ -10,6 +10,12 @@ const accounts = [
       username: 'Tester',
       email: 'a',
       password: 'a'
+    },
+    {
+      userId: '3',
+      username: 'Filipe',
+      email: 'filipe@filipe.com',
+      password: '123'
     }
   ];
   
