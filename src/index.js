@@ -123,7 +123,7 @@ app.get('/musicas', (req, res) => {
 
 // Obter uma música pelo ID
 app.get('/musicas/:id', (req, res) => {
-  const musicaId = parseInt(req.params.id);
+  const musicaId = (req.params.id);
   const musica = musics.find((m) => m.id === musicaId);
   if (!musica) {
     res.status(404).json({ message: 'Música não encontrada.' });
