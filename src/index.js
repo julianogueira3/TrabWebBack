@@ -14,6 +14,8 @@ app.use(express.json());
 let playlists = require('./playlists');
 let musics = require('./music');
 const accounts = require('./accounts');
+let userPlaylists = require('./userplaylists');
+
 
 // Função para salvar os dados nos arquivos
 const saveData = () => {
@@ -33,6 +35,11 @@ function isUserExists(userId) {
   return accounts.some((user) => user.userId.toString() === userId);
 }
 
+//mostrar user playlist
+
+app.get('/userplaylists', (req, res) => {
+  res.json(userPlaylists);
+});
 
 
 // Obter todas as playlists
@@ -183,3 +190,4 @@ app.delete('/usuarios/:userId/playlists/:playlistId/musicas/:musicaId', (req, re
   saveData();
   res.status(200).json(playlist);
 });
+
